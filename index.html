@@ -621,31 +621,31 @@
             <div class="f-grid">
               <div class="f-grp">
                 <label for="vorname">Vorname *</label>
-                <input type="text" id="vorname" placeholder="Maria" required>
+                <input type="text" id="vorname" name="Vorname" placeholder="Maria" required>
                 <span class="f-err">Pflichtfeld</span>
               </div>
               <div class="f-grp">
                 <label for="nachname">Nachname *</label>
-                <input type="text" id="nachname" placeholder="Musterfrau" required>
+                <input type="text" id="nachname" name="Nachname" placeholder="Musterfrau" required>
                 <span class="f-err">Pflichtfeld</span>
               </div>
               <div class="f-grp full">
                 <label for="email">E-Mail-Adresse *</label>
-                <input type="email" id="email" placeholder="ihre@email.de" required>
+                <input type="email" id="email" name="E-Mail" placeholder="ihre@email.de" required>
                 <span class="f-err">Gültige E-Mail eingeben</span>
               </div>
               <div class="f-grp">
                 <label for="telefon">Telefon</label>
-                <input type="tel" id="telefon" placeholder="+49 …">
+                <input type="tel" id="telefon" name="Telefon" placeholder="+49 …">
               </div>
               <div class="f-grp">
                 <label for="org">Organisation *</label>
-                <input type="text" id="org" placeholder="Ihr Unternehmen" required>
+                <input type="text" id="org" name="Organisation" placeholder="Ihr Unternehmen" required>
                 <span class="f-err">Pflichtfeld</span>
               </div>
               <div class="f-grp full">
                 <label for="thema">Thema *</label>
-                <select id="thema" required>
+                <select id="thema" name="Thema" required>
                   <option value="" disabled selected>Bitte wählen …</option>
                   <option>Change Management</option>
                   <option>Organisationsentwicklung</option>
@@ -660,7 +660,7 @@
               </div>
               <div class="f-grp full">
                 <label for="anliegen">Ihr Anliegen</label>
-                <textarea id="anliegen" placeholder="Kurze Beschreibung Ihres Anliegens …" rows="3"></textarea>
+                <textarea id="anliegen" name="Anliegen" placeholder="Kurze Beschreibung Ihres Anliegens …" rows="3"></textarea>
               </div>
             </div>
             <button type="submit" class="f-submit" id="submitBtn">Anfrage senden</button>
@@ -1049,11 +1049,37 @@
     let ok = true;
     fields.forEach(f => { if (!validate(f)) ok = false; });
     if (!ok) return;
+
     const btn = document.getElementById('submitBtn');
-    btn.textContent = 'Wird gesendet …'; btn.classList.add('loading'); btn.disabled = true;
-    await new Promise(r => setTimeout(r, 1400));
-    form.style.display = 'none';
-    document.getElementById('formSuccess').classList.add('show');
+    const originalText = btn.textContent;
+    btn.textContent = 'Wird gesendet …';
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('https://formspree.io/raoul@digitalmovement.uk', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (res.ok) {
+        form.style.display = 'none';
+        document.getElementById('formSuccess').classList.add('show');
+      } else {
+        const data = await res.json();
+        const msg = data?.errors?.map(e => e.message).join(', ') || 'Unbekannter Fehler.';
+        alert('Fehler beim Senden: ' + msg);
+        btn.textContent = originalText;
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('Netzwerkfehler. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt.');
+      btn.textContent = originalText;
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
   });
 </script>
 </body>
